@@ -24,7 +24,8 @@ int main()
         std::cout << "1.) Odpri sliko," << std::endl;
         std::cout << "2.) Odpri kamero," << std::endl;
         std::cout << "3.) Odpri kamero in zacni z prepoznavanje obraza," << std::endl;
-        std::cout << "4.) Odpri kamero in zacni z prepoznavanjem prstov," << std::endl;
+        std::cout << "4.) Odpri kamero in zacni z prepoznavanjem prstov(HSV nacin)," << std::endl;
+        std::cout << "5.) Odpri kamero in zacni z prepoznavanjem prstov(Haarcascade + HSV nacin)," << std::endl;
         std::cout << "10.) Izhod iz programa.\n" << std::endl;
         std::cout << "Vasa izbira je: ";
         std::cin >> izbira;
@@ -40,7 +41,9 @@ int main()
             odpriKameroInPrepoznajObraz();
             break;
         case 4:
-            odpriKameroInPrepoznajPrste();
+            odpriKameroInPrepoznajPrsteHSV();
+            break;
+        case 5:
             break;
         case 10:
             std::cout << "Konec testiranja" << std::endl;

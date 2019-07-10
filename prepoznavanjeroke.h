@@ -4,13 +4,49 @@
 //pomoc: https://picoledelimao.github.io/blog/2015/11/15/fingertip-detection-on-opencv/
 
 #include <iostream>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/cvdef.h>
 
+#define PI 3.1415926535897932384626433832795
 
-void odpriKameroInPrepoznajPrste() {
+//Pomagalna funkcija za prepoznavanje notranjih kotov med prsti
+float notranjiKoti(float px1, float py1, float px2, float py2, float cx1, float cy1) {
+    float Ax, Ay, Bx, By, Cx, Cy, Q1, Q2, P1, P2;
+
+    float razdalja1 = std::sqrt( (px1 - cx1) * (px1 - cx1) * (py1 - cy1) * (py1 - cy1) );
+    float razdalja2 = std::sqrt( (px2 - cx1) * (px2 - cx1) * (py2 - cy1) * (py2 - cy1) );
+
+    if (razdalja1 < razdalja2) {
+        Bx = px1;
+        By = py1;
+        Ax = px2;
+        Ay = py2;
+    } else {
+        Bx = px2;
+        By = py2;
+        Ax = px1;
+        Ay = py1;
+    }
+
+    Cx = cx1;
+    Cy = cy1;
+    Q1 = Cx - Ax;
+    Q2 = Cy - Ay;
+    P1 = Bx - Ax;
+    P2 = By - Ay;
+
+    float A = std::acos( (P1*Q1 + P2*Q2) / ( std::sqrt(P1*P1+P2*P2) * std::sqrt(Q1*Q1+Q2*Q2) ) );
+    A = A * 180 / PI;
+
+    return A;
+}
+
+//Funkcija za prepoznavanje prstov
+void odpriKameroInPrepoznajPrsteHSV() {
 
     const std::string imeOkna = "Prepoznavanje roke in prstov";     //ime za okno
 
@@ -81,6 +117,54 @@ void odpriKameroInPrepoznajPrste() {
 
         //na frame narisemo povrsino
         cv::drawContours(frame, povrsine, najvecjaPovrsina, cv::Scalar(0, 0, 255), 2);
+
+        //------------------------Konveksna lupina(convex hull)------------------------
+        if (!povrsine.empty()) {    //ce najdemo kako povrsino poskusamo okrog nje naredit konveksno lupino
+            std::vector<std::vector<cv::Point> > lupina(1);     //vector poligonov namenjen za lupino
+
+            cv::convexHull(cv::Mat(povrsine.at(najvecjaPovrsina)), lupina.at(0), false);    //naredimo konveksno lupino
+            //na frame narisemo konveksno lupino
+            cv::drawContours(frame, lupina, 0, cv::Scalar(255, 0, 0), 3);
+
+            //poiscemo notranje kote lupine
+            if (lupina.at(0).size() > 2) {
+                std::vector<int> indexiLupine;
+                std::vector<cv::Vec4i> convexityDefects;
+
+                cv::convexHull(cv::Mat(povrsine.at(najvecjaPovrsina)), indexiLupine, true);     //pridobimo notranje tocke konveksne lupine
+
+                cv::convexityDefects(cv::Mat(povrsine.at(najvecjaPovrsina)), indexiLupine, convexityDefects);
+
+                cv::Rect skatlaOkrogRoke = cv::boundingRect(lupina.at(0));
+                cv::rectangle(frame, skatlaOkrogRoke, cv::Scalar(128, 127, 88), 1);
+
+                cv::Point center = cv::Point((skatlaOkrogRoke.x + skatlaOkrogRoke.width) / 2,
+                                             (skatlaOkrogRoke.y + skatlaOkrogRoke.height) / 2);
+
+                std::vector<cv::Point> pravilneTocke;
+
+                for (unsigned int i = 0; i < convexityDefects.size(); i++) {
+                    cv::Point p1 = povrsine.at(najvecjaPovrsina).at(convexityDefects[i][0]);
+                    cv::Point p2 = povrsine.at(najvecjaPovrsina).at(convexityDefects[i][1]);
+                    cv::Point p3 = povrsine.at(najvecjaPovrsina).at(convexityDefects[i][2]);
+
+                    cv::line(frame, p1, p3, cv::Scalar(0, 255, 0), 1.5);
+                    cv::line(frame, p3, p2, cv::Scalar(0, 255, 0), 1.5);
+
+                    double kot = std::atan2(center.y - p1.y, center.x - p1.x) * 180 / PI;
+                    double notranjiKot = notranjiKoti(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+                    double dolzina = std::sqrt(std::pow(p1.x - p3.x, 2) + std::pow(p1.y - p3.y, 2));
+
+                    if (kot > -30 && kot < 160 && std::abs(notranjiKot) > 20 && std::abs(notranjiKot) < 120 && dolzina > 0.1 * skatlaOkrogRoke.height) {
+                        pravilneTocke.push_back(p1);
+                    }
+                }
+
+                for (unsigned int i = 0; i < pravilneTocke.size(); i++) {
+                    cv::circle(frame, pravilneTocke.at(i), 9, cv::Scalar(255, 0, 255), 3);
+                }
+            }
+        }
 
         //------------------------Risanje na monitor------------------------
         cv::imshow(imeOkna, frame);     //prikazemo zajeti frame oz. obdelani frame na ekranu
