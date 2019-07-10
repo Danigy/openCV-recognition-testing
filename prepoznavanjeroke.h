@@ -163,6 +163,8 @@ void odpriKameroInPrepoznajPrsteHSV() {
                 for (unsigned int i = 0; i < pravilneTocke.size(); i++) {
                     cv::circle(frame, pravilneTocke.at(i), 9, cv::Scalar(255, 0, 255), 3);
                 }
+
+                cv::putText(frame, "Stevilo prstov: " + std::to_string(pravilneTocke.size()), cv::Point(3, 100), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 0, 0), 2);
             }
         }
 
