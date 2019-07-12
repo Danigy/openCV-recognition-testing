@@ -8,6 +8,8 @@
 
 //Moje knjiznice
 #include "prepoznavanjeroke.h"
+#include "prepoznavanjerokemodel.h"
+#include "prepoznavanjerokesubstrakcija.h"
 #include "prepoznavanjeobraza.h"
 #include "odprikamero.h"
 #include "odprisliko.h"
@@ -25,7 +27,8 @@ int main()
         std::cout << "2.) Odpri kamero," << std::endl;
         std::cout << "3.) Odpri kamero in zacni z prepoznavanje obraza," << std::endl;
         std::cout << "4.) Odpri kamero in zacni z prepoznavanjem prstov(HSV nacin)," << std::endl;
-        std::cout << "5.) Odpri kamero in zacni z prepoznavanjem prstov(Haarcascade + HSV nacin)," << std::endl;
+        std::cout << "5.) Odpri kamero in zacni z prepoznavanjem prstov(Model, prepocasno za kamero tako da uporabno samo na slikah)," << std::endl;
+        std::cout << "6.) Odpri kamero in zacni z prepoznavanjem prstov(HSV nacin + substrakcija)," << std::endl;
         std::cout << "10.) Izhod iz programa.\n" << std::endl;
         std::cout << "Vasa izbira je: ";
         std::cin >> izbira;
@@ -44,6 +47,10 @@ int main()
             odpriKameroInPrepoznajPrsteHSV();
             break;
         case 5:
+            odpriKameroInPrepoznajPrsteModel();
+            break;
+        case 6:
+            odpriKameroInPrepoznajPrsteHSVSub();
             break;
         case 10:
             std::cout << "Konec testiranja" << std::endl;
