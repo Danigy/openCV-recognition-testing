@@ -17,4 +17,5 @@ HEADERS += \
     prepoznavanjeroke.h \
     prepoznavanjerokemodel.h \
     prepoznavanjerokesubstrakcija.h \
-    prepoznavanjerokehaar.h
+    prepoznavanjerokehaar.h \
+    globinskslika.h
